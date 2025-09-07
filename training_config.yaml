@@ -6,10 +6,10 @@ close_mosaic: 10
 cls: 0.5
 copy_paste: 0.0
 cos_lr: true
-data: c:\Users\Hp\Desktop\traffic\traffic_dataset\dataset.yaml
+data: C:\Users\heman\OneDrive\Desktop\traffic-detection-system\traffic_dataset\dataset.yaml
 degrees: 0.0
 deterministic: true
-device: cpu
+device: cuda
 dfl: 1.5
 epochs: 50
 exist_ok: true
@@ -30,7 +30,7 @@ mode: train
 model: yolov8n.pt
 momentum: 0.937
 mosaic: 1.0
-name: traffic_yolo_20250906_111257
+name: traffic_yolo_20250907_010504
 nbs: 64
 optimizer: SGD
 patience: 20
@@ -38,7 +38,7 @@ perspective: 0.0
 pose: 12.0
 pretrained: true
 profile: false
-project: c:\Users\Hp\Desktop\traffic\runs
+project: C:\Users\heman\OneDrive\Desktop\traffic-detection-system\runs
 rect: false
 resume: false
 save: true

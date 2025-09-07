@@ -17,18 +17,23 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 
+
 class TrafficYOLOTrainer:
-    def __init__(self, project_root="c:/Users/Hp/Desktop/traffic"):
+    def __init__(self, project_root=None):
         """Initialize the YOLO trainer for traffic management system."""
-        self.project_root = Path(project_root)
+        if project_root is None:
+            # Use current working directory
+            self.project_root = Path.cwd()
+        else:
+            self.project_root = Path(project_root)
         self.dataset_path = self.project_root / "traffic_dataset"
         self.runs_path = self.project_root / "runs"
         self.models_path = self.project_root / "models"
-        
+
         # Create directories
         self.runs_path.mkdir(exist_ok=True)
         self.models_path.mkdir(exist_ok=True)
-        
+
         # Training configuration
         self.config = {
             'epochs': 50,
@@ -39,16 +44,16 @@ class TrafficYOLOTrainer:
             'workers': 4,
             'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         }
-        
+
         print(f"🚀 Traffic YOLO Trainer initialized")
         print(f"📁 Project root: {self.project_root}")
         print(f"💻 Device: {self.config['device']}")
         print(f"🖥️  CUDA available: {torch.cuda.is_available()}")
-        
+
     def validate_dataset(self):
         """Validate dataset structure and files."""
         print("\n🔍 Validating dataset...")
-        
+
         # Check essential files
         required_files = [
             self.dataset_path / "dataset.yaml",
@@ -56,31 +61,31 @@ class TrafficYOLOTrainer:
             self.dataset_path / "val.txt",
             self.dataset_path / "test.txt"
         ]
-        
+
         for file_path in required_files:
             if not file_path.exists():
                 raise FileNotFoundError(f"Required file missing: {file_path}")
-        
+
         # Count images and annotations
         images_dir = self.dataset_path / "images"
         annotations_dir = self.dataset_path / "annotations"
-        
+
         image_count = len(list(images_dir.glob("*.jpg")))
         annotation_count = len(list(annotations_dir.glob("*.txt")))
-        
+
         print(f"✅ Dataset validation passed")
         print(f"📊 Images: {image_count}")
         print(f"📝 Annotations: {annotation_count}")
-        
+
         if image_count != annotation_count:
             print(f"⚠️  Warning: Image and annotation counts don't match!")
-        
+
         return True
-    
+
     def setup_training_config(self):
         """Setup optimized training configuration for traffic system."""
         print("\n⚙️  Setting up training configuration...")
-        
+
         # Create custom training config
         training_config = {
             'task': 'detect',
@@ -141,24 +146,24 @@ class TrafficYOLOTrainer:
             'mixup': 0.0,
             'copy_paste': 0.0
         }
-        
+
         # Save training config
         config_path = self.project_root / "training_config.yaml"
         with open(config_path, 'w') as f:
             yaml.dump(training_config, f, default_flow_style=False)
-        
+
         print(f"✅ Training config saved: {config_path}")
         return training_config
-    
+
     def start_training(self):
         """Start YOLOv8 training with optimized settings."""
         print("\n🚀 Starting YOLOv8 training...")
         print("=" * 60)
-        
+
         try:
             # Initialize YOLO model
             model = YOLO('yolov8n.pt')  # Start with YOLOv8 nano
-            
+
             # Start training
             results = model.train(
                 data=str(self.dataset_path / "dataset.yaml"),
@@ -207,21 +212,21 @@ class TrafficYOLOTrainer:
                 mixup=0.0,
                 copy_paste=0.0
             )
-            
+
             print("✅ Training completed successfully!")
             return results
-            
+
         except Exception as e:
             print(f"❌ Training failed: {e}")
             raise e
-    
+
     def evaluate_model(self, model_path):
         """Evaluate trained model performance."""
         print("\n📊 Evaluating model performance...")
-        
+
         try:
             model = YOLO(model_path)
-            
+
             # Validate on test set
             results = model.val(
                 data=str(self.dataset_path / "dataset.yaml"),
@@ -239,46 +244,46 @@ class TrafficYOLOTrainer:
                 plots=True,
                 verbose=True
             )
-            
+
             print("✅ Model evaluation completed!")
             return results
-            
+
         except Exception as e:
             print(f"❌ Model evaluation failed: {e}")
             raise e
-    
+
     def save_best_model(self, run_name):
         """Save the best model to models directory."""
         print("\n💾 Saving best model...")
-        
+
         try:
             # Find the best model from training run
             run_dir = self.runs_path / "detect" / run_name
             best_model = run_dir / "weights" / "best.pt"
             last_model = run_dir / "weights" / "last.pt"
-            
+
             if best_model.exists():
                 # Copy best model to models directory
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 model_name = f"traffic_yolo_best_{timestamp}.pt"
                 destination = self.models_path / model_name
-                
+
                 shutil.copy2(best_model, destination)
-                
+
                 print(f"✅ Best model saved: {destination}")
                 return destination
             else:
                 print("❌ Best model not found!")
                 return None
-                
+
         except Exception as e:
             print(f"❌ Failed to save model: {e}")
             return None
-    
+
     def generate_training_report(self, results, model_path):
         """Generate comprehensive training report."""
         print("\n📋 Generating training report...")
-        
+
         report = f"""
 # Traffic Management System - YOLOv8 Training Report
 Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -326,63 +331,67 @@ Best model saved at: {model_path}
 - Time Savings: 5+ weeks ahead of schedule
 - Technical Achievement: World-class ambulance detection system
 """
-        
+
         # Save report
-        report_path = self.project_root / f"training_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        report_path = self.project_root / \
+            f"training_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         with open(report_path, 'w') as f:
             f.write(report)
-        
+
         print(f"✅ Training report saved: {report_path}")
         return report_path
+
 
 def main():
     """Main training pipeline execution."""
     print("🚀 Traffic Management System - YOLOv8 Training Pipeline")
     print("=" * 60)
-    
+
     try:
         # Initialize trainer
         trainer = TrafficYOLOTrainer()
-        
+
         # Validate dataset
         trainer.validate_dataset()
-        
+
         # Setup training configuration
         training_config = trainer.setup_training_config()
-        
+
         # Start training
-        print(f"\n⏰ Starting training at {datetime.now().strftime('%H:%M:%S')}")
+        print(
+            f"\n⏰ Starting training at {datetime.now().strftime('%H:%M:%S')}")
         print("📝 Training will take approximately 2-4 hours...")
         print("🎯 Focus: Ambulance detection (Class 26) + Indian traffic")
-        
+
         results = trainer.start_training()
-        
+
         # Get run name for model saving
         run_name = f'traffic_yolo_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
-        
+
         # Save best model
         model_path = trainer.save_best_model(run_name)
-        
+
         # Evaluate model
         if model_path:
             eval_results = trainer.evaluate_model(model_path)
-        
+
         # Generate report
         report_path = trainer.generate_training_report(results, model_path)
-        
+
         print("\n🎉 TRAINING PIPELINE COMPLETED SUCCESSFULLY!")
         print("=" * 60)
         print(f"✅ Best model: {model_path}")
         print(f"📊 Training report: {report_path}")
         print(f"🕒 Completed at: {datetime.now().strftime('%H:%M:%S')}")
-        
+
         print("\n🚀 Your traffic management AI is ready!")
         print("Next: Test ambulance detection and deploy system")
-        
+
     except Exception as e:
         print(f"\n❌ Training pipeline failed: {e}")
         print("Please check the error and try again.")
         raise e
+
 
 if __name__ == "__main__":
     main()

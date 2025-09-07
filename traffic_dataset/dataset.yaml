@@ -1,5 +1,5 @@
 # Traffic Management Dataset Configuration
-path: c:\Users\Hp\Desktop\traffic\traffic_dataset
+path: C:\Users\heman\OneDrive\Desktop\traffic-detection-system\traffic_dataset
 train: train.txt
 val: val.txt
 test: test.txt
